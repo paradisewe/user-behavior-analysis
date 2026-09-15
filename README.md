@@ -17,6 +17,18 @@
 
 ---
 
+## 🖥 Dashboard 展示
+
+项目提供两个版本的交互式看板：
+
+| 版本 | 位置 | 特点 |
+|------|------|------|
+| **Excel** | `python/reports/dashboard.xlsx` | 7 个 Sheet，sparkline 趋势图 |
+| **Streamlit** | `python/dashboard/app.py` | 交互式筛选 + 5 个 Tab |
+
+**Streamlit 版预览**：
+
+![Streamlit 概览](python/reports/screenshots/streamlit_overview.png)
 ## 🎯 项目亮点
 
 - **数据规模**：原始数据 100,150,807 行、987,994 名用户
