@@ -490,7 +490,7 @@ def main():
     plot_user_funnel(df)
     plot_dau_trend(df)
     plot_purchase_trend(df)
-    plot_hourly_heatmap(df)
+    plot_hourly_heatmap(df)visualization
     plot_top_categories(df)
     plot_user_segmentation(df)
     plot_purchase_heatmap_by_day(df)
