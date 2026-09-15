@@ -19,11 +19,12 @@ DEFAULT_INPUT = CLEANED_FILE
 # ---------- 加载数据 ----------
 def load_data(input_path: Path = DEFAULT_INPUT) -> pd.DataFrame:
     df = pd.read_csv(input_path, parse_dates=["timestamp"])
+    # 时间戳在 data_cleaning 阶段已转为北京时间，这里直接使用
 
     # 派生分析所需的三列
-    df["behavior_time"] = df["timestamp"]     # 完整时间戳
-    df["date"] = df["timestamp"].dt.date      # 日期
-    df["hour"] = df["timestamp"].dt.hour      # 小时
+    df["behavior_time"] = df["timestamp"]
+    df["date"] = df["timestamp"].dt.date
+    df["hour"] = df["timestamp"].dt.hour
 
     print(f"加载数据：{input_path}")
     print(f"行数：{len(df):,}")

@@ -58,9 +58,13 @@ def normalize_behavior(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def convert_timestamp(df: pd.DataFrame) -> pd.DataFrame:
-    """时间戳转换：Unix 秒 → datetime。"""
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s")
-    print(f"时间戳转换：{df['timestamp'].min()} ~ {df['timestamp'].max()}")
+    """时间戳转换：Unix 秒 → 北京时间（naive datetime）。"""
+    df["timestamp"] = (
+        pd.to_datetime(df["timestamp"], unit="s", utc=True)
+        .dt.tz_convert("Asia/Shanghai")
+        .dt.tz_localize(None)
+    )
+    print(f"时间戳转换（北京时间）：{df['timestamp'].min()} ~ {df['timestamp'].max()}")
     return df
 
 
