@@ -1,0 +1,5 @@
+﻿layer,users,avg_eligible_days,eligible_pairs,retained_pairs,next_day_retention
+1天,7,1.0,7,0,0.0
+2~3天,487,2.38,1161,342,0.2946
+4~5天,10040,3.61,36285,21488,0.5922
+6~9天,38792,6.75,261997,230617,0.8802
