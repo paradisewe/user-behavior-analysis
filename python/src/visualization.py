@@ -1,6 +1,6 @@
 """淘宝用户行为分析 - 可视化模块
 
-生成 9 张核心图表，保存到 reports/figures/ 目录。
+生成核心图表（漏斗/趋势/热力图 9 张 + 深化分析图表），保存到 reports/figures/ 目录。
 """
 
 from pathlib import Path
@@ -24,6 +24,16 @@ from analysis import (
     hourly_activity,
     top_categories_by_purchase,
     user_segmentation,
+    sampling_confidence_checks,
+    dau_peak_analysis,
+    compute_rfm,
+    score_rfm,
+    rfm_segment_summary,
+    daily_next_day_retention,
+    retention_by_activity_layer,
+    classify_user_paths,
+    build_baskets,
+    mine_association_rules,
 )
 
 
@@ -433,6 +443,261 @@ def plot_purchase_heatmap_by_weekday(df: pd.DataFrame):
 
 
 # ============================================================
+# 图 9a：抽样 95% 置信区间 vs SQL 全量值
+# ============================================================
+def plot_significance_ci(df: pd.DataFrame):
+    checks = sampling_confidence_checks(df)
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    for i, row in enumerate(checks):
+        y = len(checks) - 1 - i
+        ax.errorbar(
+            row["sample_rate"] * 100, y,
+            xerr=[[(row["sample_rate"] - row["ci95_low"]) * 100],
+                  [(row["ci95_high"] - row["sample_rate"]) * 100]],
+            fmt="o", capsize=5, color="#4C9BE8", markersize=8, linewidth=2,
+            label="抽样均值 ± 95% CI" if i == 0 else None,
+        )
+        ax.plot(row["full_data_rate"] * 100, y, "d", color="#E94E4E",
+                markersize=9, label="SQL 全量值" if i == 0 else None)
+    ax.set_yticks(range(len(checks)))
+    ax.set_yticklabels([r["metric"] for r in reversed(checks)])
+    ax.set_xlabel("比率（%）", fontsize=12)
+    ax.set_title("核心指标：抽样 95% 置信区间 vs SQL 全量值（红钻均落在区间内）",
+                 fontsize=14, fontweight="bold")
+    ax.legend(loc="lower right")
+    ax.grid(axis="x", alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "significance_ci.png", bbox_inches="tight")
+    plt.close()
+    print("significance_ci.png")
+
+
+# ============================================================
+# 图 9b：DAU 工作日 vs 周末
+# ============================================================
+def plot_dau_weekday(df: pd.DataFrame):
+    daily = pd.DataFrame(dau_peak_analysis(df)["daily_detail"])
+    daily["date"] = pd.to_datetime(daily["date"])
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    colors = ["#E94E4E" if w else "#4C9BE8" for w in daily["is_weekend"]]
+    axes[0].bar(daily["date"].dt.strftime("%m-%d"), daily["dau"], color=colors)
+    axes[0].set_title("每日 DAU（红=周末）", fontsize=13, fontweight="bold")
+    axes[0].tick_params(axis="x", rotation=45)
+    axes[0].yaxis.set_major_formatter(mticker.FuncFormatter(_format_thousands))
+
+    axes[1].bar(daily["date"].dt.strftime("%m-%d"), daily["buy_users"], color=colors)
+    axes[1].set_title("每日购买用户数（红=周末）", fontsize=13, fontweight="bold")
+    axes[1].tick_params(axis="x", rotation=45)
+    axes[1].yaxis.set_major_formatter(mticker.FuncFormatter(_format_thousands))
+
+    fig.suptitle("工作日 vs 周末对比：DAU 与购买用户数", fontsize=15,
+                 fontweight="bold", y=1.02)
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "dau_weekday_weekend.png", bbox_inches="tight")
+    plt.close()
+    print("dau_weekday_weekend.png")
+
+
+# ============================================================
+# 图 10a/10b：RFM 用户分层
+# ============================================================
+def plot_rfm(df: pd.DataFrame):
+    rf = score_rfm(compute_rfm(df))
+    summary = rfm_segment_summary(rf)
+    plot_df = summary[summary["segment"] != "未购买用户"]
+
+    colors = ["#E94E4E", "#F5A623", "#2CA02C", "#8C564B", "#4C9BE8", "#7F7F7F"]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    bars = axes[0].bar(plot_df["segment"], plot_df["users"], color=colors)
+    for bar, share in zip(bars, plot_df["user_share"]):
+        axes[0].text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+                     f"{share:.1%}", ha="center", va="bottom", fontsize=9)
+    axes[0].set_title("购买用户 RF 分层分布（% 为占全体用户比例）",
+                      fontsize=13, fontweight="bold")
+    axes[0].tick_params(axis="x", rotation=30)
+    axes[0].yaxis.set_major_formatter(mticker.FuncFormatter(_format_thousands))
+
+    axes[1].bar(plot_df["segment"], plot_df["avg_frequency"], color=colors)
+    axes[1].set_title("各层级平均购买次数", fontsize=13, fontweight="bold")
+    axes[1].tick_params(axis="x", rotation=30)
+
+    fig.suptitle("RF 用户分层（窗口仅 9 天，F 上限低属预期）", fontsize=15,
+                 fontweight="bold", y=1.02)
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "rfm_segments.png", bbox_inches="tight")
+    plt.close()
+    print("rfm_segments.png")
+
+    # R×F 得分矩阵
+    buyers = rf[rf["is_buyer"]]
+    matrix = buyers.pivot_table(
+        index="r_score", columns="f_score", values="user_id", aggfunc="count"
+    ).reindex(index=[4, 3, 2, 1])
+
+    fig, ax = plt.subplots(figsize=(7, 5.5))
+    im = ax.imshow(matrix.values, cmap="YlOrRd", aspect="auto")
+    ax.set_xticks(range(4), labels=[f"F={c}" for c in matrix.columns])
+    ax.set_yticks(range(4), labels=[f"R={r}" for r in matrix.index])
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            v = matrix.values[i, j]
+            ax.text(j, i, f"{v:,}", ha="center", va="center",
+                    color="white" if v > matrix.values.max() * 0.6 else "black")
+    ax.set_title("购买用户 R×F 得分矩阵（人数）", fontsize=14, fontweight="bold")
+    ax.set_xlabel("F_score（购买频次，1~4）", fontsize=12)
+    ax.set_ylabel("R_score（最近购买，1~4，4=最近）", fontsize=12)
+    fig.colorbar(im, ax=ax, shrink=0.8)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "rfm_matrix.png", bbox_inches="tight")
+    plt.close()
+    print("rfm_matrix.png")
+
+
+# ============================================================
+# 图 11：次日留存
+# ============================================================
+def plot_retention(df: pd.DataFrame):
+    daily = daily_next_day_retention(df)
+    layered = retention_by_activity_layer(df)
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    axes[0].plot(daily["date"].astype(str).str[5:],
+                 daily["next_day_retention"] * 100,
+                 marker="o", color="#4C9BE8", linewidth=2)
+    for x, y in zip(daily["date"].astype(str).str[5:],
+                    daily["next_day_retention"] * 100):
+        axes[0].annotate(f"{y:.1f}%", (x, y), textcoords="offset points",
+                         xytext=(0, 8), ha="center", fontsize=9)
+    axes[0].set_title("分日期的次日留存率（末日不计）", fontsize=13, fontweight="bold")
+    axes[0].set_ylabel("次日留存率（%）", fontsize=12)
+    axes[0].set_ylim(0, 100)
+    axes[0].grid(axis="y", alpha=0.3)
+
+    bars = axes[1].bar(layered["layer"], layered["next_day_retention"] * 100,
+                       color=["#c7e9c0", "#74c476", "#31a354", "#006d2c"])
+    for bar, users in zip(bars, layered["users"]):
+        axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                     f"n={users:,}", ha="center", fontsize=9)
+    axes[1].set_title("按活跃分层的次日留存率", fontsize=13, fontweight="bold")
+    axes[1].set_ylabel("次日留存率（%）", fontsize=12)
+    axes[1].set_xlabel("窗口内活跃天数", fontsize=12)
+    axes[1].set_ylim(0, 100)
+
+    fig.suptitle("次日留存分析（9 天窗口，活跃分层差异显著）", fontsize=15,
+                 fontweight="bold", y=1.02)
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "retention_overview.png", bbox_inches="tight")
+    plt.close()
+    print("retention_overview.png")
+
+
+# ============================================================
+# 图 12：用户路径桑基图（plotly 交互式 HTML）
+# ============================================================
+def plot_path_sankey(df: pd.DataFrame):
+    import plotly.graph_objects as go
+
+    pairs = classify_user_paths(df)
+    n = len(pairs)
+    stage2 = pairs.groupby("path").size()
+    stage2_to_outcome = pairs.groupby(["path", "outcome"]).size()
+
+    labels = ["浏览 (pv)", *stage2.index.tolist(), "购买", "未购买"]
+    node_index = {name: i for i, name in enumerate(labels)}
+    colors = ["#4C9BE8", "#E94E4E", "#7B68EE", "#F5A623", "#2CA02C", "#7F7F7F"]
+
+    link_color = {
+        "直接购买": "rgba(0, 204, 150, 0.4)",
+        "先加购": "rgba(239, 85, 59, 0.35)",
+        "先收藏": "rgba(171, 99, 250, 0.35)",
+        "仅浏览": "rgba(127, 127, 127, 0.3)",
+    }
+
+    sources, targets, values, clist = [], [], [], []
+    for path_name, count in stage2.items():
+        sources.append(node_index["浏览 (pv)"])
+        targets.append(node_index[path_name])
+        values.append(int(count))
+        clist.append(link_color.get(path_name, "rgba(200,200,200,0.3)"))
+
+    for (path_name, outcome), count in stage2_to_outcome.items():
+        sources.append(node_index[path_name])
+        targets.append(node_index[outcome])
+        values.append(int(count))
+        clist.append(link_color.get(path_name, "rgba(200,200,200,0.3)"))
+
+    fig = go.Figure(go.Sankey(
+        node=dict(
+            pad=18, thickness=22,
+            label=[f"{name}<br>({v:,})" for name, v in zip(
+                labels,
+                [n, *stage2.values,
+                 int((pairs["outcome"] == "购买").sum()),
+                 int((pairs["outcome"] == "未购买").sum())],
+            )],
+            color=colors[: len(labels)],
+        ),
+        link=dict(source=sources, target=targets, value=values, color=clist),
+    ))
+    fig.update_layout(
+        title=f"用户-商品级路径桑基图（n={n:,} 个浏览过的商品对）",
+        font=dict(size=13),
+    )
+    fig.write_html(str(FIG_DIR / "path_sankey.html"))
+    print("path_sankey.html")
+
+
+# ============================================================
+# 图 13：类目关联规则
+# ============================================================
+def plot_association(df: pd.DataFrame):
+    baskets = build_baskets(df)
+    rules = mine_association_rules(baskets, min_support=0.0005,
+                                   min_confidence=0.10, min_lift=1.0, top_n=100)
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+    sc = ax.scatter(rules["support"] * 100, rules["confidence"] * 100,
+                    s=np.clip(rules["lift"], 1, None) * 12,
+                    c=rules["lift"], cmap="viridis", alpha=0.7,
+                    edgecolors="k", linewidths=0.3)
+    fig.colorbar(sc, ax=ax, label="提升度 lift")
+    ax.set_xlabel("支持度（%）", fontsize=12)
+    ax.set_ylabel("置信度（%）", fontsize=12)
+    ax.set_title("类目级关联规则：支持度 × 置信度（气泡大小=提升度）",
+                 fontsize=14, fontweight="bold")
+    ax.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "association_scatter.png", bbox_inches="tight")
+    plt.close()
+    print("association_scatter.png")
+
+    top = rules.head(15).iloc[::-1]
+    labels = [f"{int(r.antecedent_category)} → {int(r.consequent_category)}"
+              for r in top.itertuples()]
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.barh(labels, top["lift"], color="#4C9BE8")
+    for i, (lift, conf) in enumerate(zip(top["lift"], top["confidence"])):
+        ax.text(lift, i, f"  lift={lift:.1f}, conf={conf:.1%}",
+                va="center", fontsize=8)
+    ax.set_xlabel("提升度 lift", fontsize=12)
+    ax.set_title("Top 15 类目关联规则（按提升度）", fontsize=14, fontweight="bold")
+
+    plt.tight_layout()
+    plt.savefig(FIG_DIR / "association_top_rules.png", bbox_inches="tight")
+    plt.close()
+    print("association_top_rules.png")
+
+
+# ============================================================
 # 主入口
 # ============================================================
 def main():
@@ -451,6 +716,14 @@ def main():
     plot_user_segmentation(df)
     plot_purchase_heatmap_by_day(df)
     plot_purchase_heatmap_by_weekday(df)
+
+    # 深化分析图表
+    plot_significance_ci(df)
+    plot_dau_weekday(df)
+    plot_rfm(df)
+    plot_retention(df)
+    plot_path_sankey(df)
+    plot_association(df)
 
     print(f"全部完成，保存到：{FIG_DIR}")
 
