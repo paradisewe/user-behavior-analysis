@@ -1,0 +1,97 @@
+{
+  "z_tests": {
+    "加购 vs 未加购": {
+      "rate_a": 0.7158,
+      "rate_b": 0.5677,
+      "diff": 0.1481,
+      "diff_ci95": [
+        0.1383,
+        0.1579
+      ],
+      "z": 30.817,
+      "p_value": 0.0,
+      "significant": true,
+      "n_a": 36565,
+      "n_b": 12761,
+      "group_a": "加购用户（cart）",
+      "group_b": "未加购用户"
+    },
+    "收藏 vs 未收藏": {
+      "rate_a": 0.7054,
+      "rate_b": 0.6591,
+      "diff": 0.0463,
+      "diff_ci95": [
+        0.0379,
+        0.0546
+      ],
+      "z": 10.758,
+      "p_value": 0.0,
+      "significant": true,
+      "n_a": 19632,
+      "n_b": 29694,
+      "group_a": "收藏用户（fav）",
+      "group_b": "未收藏用户"
+    }
+  },
+  "sampling_vs_full": [
+    {
+      "metric": "buy_share",
+      "sample_rate": 0.0201,
+      "ci95_low": 0.02,
+      "ci95_high": 0.0202,
+      "full_data_rate": 0.0201,
+      "full_in_ci": true,
+      "margin_of_error": 0.0001,
+      "n": 4985162,
+      "n_desc": "全量行为数 100,150,807"
+    },
+    {
+      "metric": "pv_to_buy_rate",
+      "sample_rate": 0.014,
+      "ci95_low": 0.0139,
+      "ci95_high": 0.0142,
+      "full_data_rate": 0.014,
+      "full_in_ci": true,
+      "margin_of_error": 0.0001,
+      "n": 3533569,
+      "n_desc": "全量用户-商品对（pv）"
+    },
+    {
+      "metric": "cart_to_buy_rate",
+      "sample_rate": 0.0599,
+      "ci95_low": 0.059,
+      "ci95_high": 0.0608,
+      "full_data_rate": 0.0606,
+      "full_in_ci": true,
+      "margin_of_error": 0.0009,
+      "n": 266742,
+      "n_desc": "全量用户-商品对（cart）"
+    },
+    {
+      "metric": "repurchase_rate",
+      "sample_rate": 0.6609,
+      "ci95_low": 0.6558,
+      "ci95_high": 0.666,
+      "full_data_rate": 0.6601,
+      "full_in_ci": true,
+      "margin_of_error": 0.0051,
+      "n": 33420,
+      "n_desc": "全量购买用户数"
+    }
+  ],
+  "dau_peak": {
+    "weekday_dau_mean": 36001,
+    "weekend_dau_mean": 41918,
+    "weekend_vs_weekend_lift": 0.1644,
+    "weekday_buy_users_mean": 7138,
+    "weekend_buy_users_mean": 7647,
+    "peak_date": "2017-12-02",
+    "peak_dau": 48484,
+    "baseline_dau_mean": 35852,
+    "peak_vs_baseline_lift": 0.3523,
+    "peak_buy_users": 8594,
+    "baseline_buy_users_mean": 6998,
+    "peak_buy_vs_baseline_lift": 0.2281,
+    "note": "样本仅 9 天，不做 z-score 异常检测，采用分组对比 + 基线提升幅度"
+  }
+}
