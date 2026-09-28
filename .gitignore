@@ -5,6 +5,8 @@
 
 # 但是排除报告目录下的 CSV 结果（如果以后想上传结果）
 !sql/results/*.csv
+!python/reports/*.csv
+!python/reports/**/*.csv
 
 # ========== Python 缓存 ==========
 __pycache__/
