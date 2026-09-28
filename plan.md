@@ -92,10 +92,10 @@
 
 ## 五、产品化深度
 
-### 13. Streamlit 部署上云 ⬆️ 优先级上调
+### 13. Streamlit 部署上云 ✅（feature/streamlit-cloud 分支，2026-09-29）
 - **做什么**：准备精简数据，部署到 Streamlit Cloud，提供在线链接
 - **为什么提前**：1~2 天成本换「面试官点链接就能看」，是全清单杠杆率最高的一项；还能倒逼精简数据、收尾 dashboard
-- **成本**：1~2 天
+- **实际结果**：cloud_dashboard/ 完成——自包含应用 + 68KB 预聚合 JSON（无明细、可公开，口径复用 python/src 与本地版一致）；本地 smoke test 通过（HTTP 200 + main() 全流程无错）。**上线仅剩一步**：把分支推送到 GitHub 后在 share.streamlit.io 以 `cloud_dashboard/app.py` 为入口部署（步骤见 cloud_dashboard/README.md）
 
 ---
 
