@@ -469,9 +469,9 @@ def plot_significance_ci(df: pd.DataFrame):
     ax.grid(axis="x", alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "significance_ci.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "09a_significance_ci.png", bbox_inches="tight")
     plt.close()
-    print("significance_ci.png")
+    print("09a_significance_ci.png")
 
 
 # ============================================================
@@ -497,9 +497,9 @@ def plot_dau_weekday(df: pd.DataFrame):
     fig.suptitle("工作日 vs 周末对比：DAU 与购买用户数", fontsize=15,
                  fontweight="bold", y=1.02)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "dau_weekday_weekend.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "09b_dau_weekday_weekend.png", bbox_inches="tight")
     plt.close()
-    print("dau_weekday_weekend.png")
+    print("09b_dau_weekday_weekend.png")
 
 
 # ============================================================
@@ -530,9 +530,9 @@ def plot_rfm(df: pd.DataFrame):
     fig.suptitle("RF 用户分层（窗口仅 9 天，F 上限低属预期）", fontsize=15,
                  fontweight="bold", y=1.02)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "rfm_segments.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "10a_rfm_segments.png", bbox_inches="tight")
     plt.close()
-    print("rfm_segments.png")
+    print("10a_rfm_segments.png")
 
     # R×F 得分矩阵
     buyers = rf[rf["is_buyer"]]
@@ -555,9 +555,9 @@ def plot_rfm(df: pd.DataFrame):
     fig.colorbar(im, ax=ax, shrink=0.8)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "rfm_matrix.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "10b_rfm_matrix.png", bbox_inches="tight")
     plt.close()
-    print("rfm_matrix.png")
+    print("10b_rfm_matrix.png")
 
 
 # ============================================================
@@ -594,9 +594,9 @@ def plot_retention(df: pd.DataFrame):
     fig.suptitle("次日留存分析（9 天窗口，活跃分层差异显著）", fontsize=15,
                  fontweight="bold", y=1.02)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "retention_overview.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "11_retention_overview.png", bbox_inches="tight")
     plt.close()
-    print("retention_overview.png")
+    print("11_retention_overview.png")
 
 
 # ============================================================
@@ -651,8 +651,8 @@ def plot_path_sankey(df: pd.DataFrame):
         title=f"用户-商品级路径桑基图（n={n:,} 个浏览过的商品对）",
         font=dict(size=13),
     )
-    fig.write_html(str(FIG_DIR / "path_sankey.html"))
-    print("path_sankey.html")
+    fig.write_html(str(FIG_DIR / "12_path_sankey.html"))
+    print("12_path_sankey.html")
 
 
 # ============================================================
@@ -676,9 +676,9 @@ def plot_association(df: pd.DataFrame):
     ax.grid(alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "association_scatter.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "13a_association_scatter.png", bbox_inches="tight")
     plt.close()
-    print("association_scatter.png")
+    print("13a_association_scatter.png")
 
     top = rules.head(15).iloc[::-1]
     labels = [f"{int(r.antecedent_category)} → {int(r.consequent_category)}"
@@ -692,9 +692,9 @@ def plot_association(df: pd.DataFrame):
     ax.set_title("Top 15 类目关联规则（按提升度）", fontsize=14, fontweight="bold")
 
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "association_top_rules.png", bbox_inches="tight")
+    plt.savefig(FIG_DIR / "13b_association_top_rules.png", bbox_inches="tight")
     plt.close()
-    print("association_top_rules.png")
+    print("13b_association_top_rules.png")
 
 
 # ============================================================
