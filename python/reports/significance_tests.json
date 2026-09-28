@@ -82,7 +82,7 @@
   "dau_peak": {
     "weekday_dau_mean": 36001,
     "weekend_dau_mean": 41918,
-    "weekend_vs_weekend_lift": 0.1644,
+    "weekend_vs_weekday_lift": 0.1644,
     "weekday_buy_users_mean": 7138,
     "weekend_buy_users_mean": 7647,
     "peak_date": "2017-12-02",
