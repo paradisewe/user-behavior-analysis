@@ -230,7 +230,7 @@ python/
 ### 环境准备
 
 ```bash
-pip install pandas numpy pyarrow matplotlib seaborn duckdb
+pip install pandas numpy pyarrow matplotlib seaborn duckdb scipy plotly
 ```
 
 ### 数据准备
@@ -347,13 +347,52 @@ streamlit run dashboard/app.py
 | | 购买用户数 | 33,420 |
 ---
 
+## 🔬 深化分析（2026-09 新增）
+
+在原有漏斗与复购分析之上，新增 5 个深化模块（脚本均在 `src/`，结果输出到 `reports/`，已纳入 `run_all.py` 一键管道）：
+
+### 1. 显著性检验完整版（`significance_test.py`）
+
+- **两比例 z 检验**：加购用户购买率 71.58% vs 未加购用户 56.77%，差异 +14.81pp（z=30.8，p<0.001），「促进加购」的结论首次具备统计显著性支撑；收藏 vs 未收藏差异 +4.63pp（z=10.8，p<0.001）同样显著
+- **抽样置信区间验证**：对 buy 占比、pv→buy、cart→buy、复购率计算 Wilson 95% 置信区间，**SQL 全量值全部落在抽样区间内**（如 cart→buy 抽样 5.99%，CI [5.90%, 6.08%]，全量 6.06%），抽样方法再次得到验证
+- **DAU 峰值分析**：仅 9 个数据点不做 z-score，改用工作日/周末分组对比 + 基线提升：12-02 DAU 较基线（11-25~12-01 均值 35,852）提升 **+35.2%**，购买用户数提升 +22.8%
+- 产出：`reports/significance_tests.json` + `figures/significance_ci.png`、`figures/dau_weekday_weekend.png`
+
+### 2. RFM 用户分层（`rfm_analysis.py`）
+
+- 无金额维度，做 **RF 两维打分**；9 天窗口下 R 天粒度粗（大量用户末日购买），按窗口手工分箱而非 30 天经典阈值
+- 购买用户划分为 6 个层级 + 未购买用户单独一类：**重要价值客户 9,562 人（19.4%）**，平均购买 5.1 次、平均 R 0.4 天；未购买用户占 32.3%
+- 产出：`reports/rfm_segments.csv` + `figures/rfm_segments.png`、`figures/rfm_matrix.png`
+
+### 3. 次日留存分析（`retention_analysis.py`）
+
+- 9 天窗口缩水版：只做**次日留存**（7 日留存样本太薄、30 日做不了）
+- 基线次日留存约 **78%**；12-01→12-02 跳升至 98.3%，印证 12-02 DAU 异常是「老用户几乎全部回流 + 大量新用户」
+- **活跃分层单调性极强**：窗口内活跃 6~9 天的用户次日留存 88.0%，4~5 天 59.2%，2~3 天 29.5%
+- 产出：`reports/retention_summary.csv` + `figures/retention_overview.png`
+
+### 4. 用户路径分析（`path_analysis.py`）
+
+- 用户-商品级三段路径归类（首次行为时间排序，平局按 pv<fav<cart<buy 次序打破）+ **plotly 交互式桑基图**
+- 93.4% 的浏览无后续行为；「先加购」路径购买率 **9.44%** > 「先收藏」**7.99%**；「直接购买」仅占浏览对的 1.38%
+- 产出：`reports/path_summary.csv` + `figures/path_sankey.html`（浏览器打开可交互）
+
+### 5. 类目级关联规则挖掘（`association_analysis.py`）
+
+- **技术红线**：商品 ID 脱敏且数据稀疏，商品级 Apriori（support=0.01）挖不出任何规则、稠密 one-hot 会 OOM——因此按 `category_id` 聚合购物篮，做**精确 2-项集计数**（结果等价于 FP-Growth 的 2-项集，无需稠密矩阵）
+- 20,970 个有效购物篮（购买 ≥2 类目）；高支持度规则如「类目 4159072 → 2885642」：支持度 0.87%、置信度 27.6%、**lift 5.19**；长尾高 lift 规则（lift>100）支持度极低，仅作参考
+- 产出：`reports/association_rules.csv` + `figures/association_scatter.png`、`figures/association_top_rules.png`
+
+---
+
 ## 🔍 可改进方向
 
-1. **时间维度分层**：当前按天分层的权重未细化到「天 × 层」，未来可做更精细的时间加权
-2. **用户画像**：结合用户所属商品类目偏好做聚类，识别不同价值人群
-3. **A/B 测试框架**：将漏斗分析改为可支持因果推断的实验框架
+1. ~~**用户画像**~~ → ✅ 已完成 RFM 分层（见上文深化分析）；后续可结合类目偏好做聚类
+2. ~~**可视化交互**~~ → ✅ 已完成 Streamlit Dashboard 与路径桑基图
+3. **A/B 测试框架**：将漏斗分析改为可支持因果推断的实验框架（基于历史数据模拟）
 4. **实时化**：将批处理管道改造为流式（Kafka + Flink）
-5. **可视化交互**：用 Streamlit 做交互式 Dashboard
+5. **关联规则下钻**：类目级规则已跑通，可尝试 FP-Growth 挖 ≥3 项集并结合用户分层对比
+6. **时间维度分层**：当前按天分层的权重未细化到「天 × 层」，未来可做更精细的时间加权
 
 ---
 

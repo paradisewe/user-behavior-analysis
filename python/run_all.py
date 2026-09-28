@@ -22,6 +22,11 @@ STEPS = [
     ("正式清洗", SRC / "data_cleaning.py"),
     ("核心分析", SRC / "analysis.py"),
     ("可视化",   SRC / "visualization.py"),
+    ("显著性检验", SRC / "significance_test.py"),
+    ("RFM 用户分层", SRC / "rfm_analysis.py"),
+    ("次日留存分析", SRC / "retention_analysis.py"),
+    ("用户路径分析", SRC / "path_analysis.py"),
+    ("关联规则挖掘", SRC / "association_analysis.py"),
 ]
 
 
