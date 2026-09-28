@@ -7,6 +7,9 @@
 !sql/results/*.csv
 !python/reports/*.csv
 !python/reports/**/*.csv
+!ab_test/reports/**
+!recommender/reports/**
+!ai_assistant/reports/**
 
 # ========== Python 缓存 ==========
 __pycache__/
