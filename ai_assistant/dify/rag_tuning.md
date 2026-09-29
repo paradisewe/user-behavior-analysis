@@ -48,12 +48,14 @@ Dify → 设置 → 模型供应商 → OpenAI-API-compatible 再加一个：
 
 知识库设置里把嵌入模型切到 bge-m3（重新索引）。
 
-### 4. Rerank（进阶，暂不启用）
+### 4. Rerank（✅ 用阿里百炼 API 时可启用）
 
-llama.cpp 已支持 `--rerank` 启动 bge-reranker 类 GGUF 模型，但 Dify 的
-OpenAI 兼容供应商**不暴露 rerank 模型类型**，直接配不进去。可行的替代：
-在 Chatflow 里检索后加一个 HTTP 节点调 `http://host.docker.internal:8082/rerank`
-做二次排序。当前栈先用权重混合（第 2 步），收益已足够。
+通义千问供应商插件自带重排模型 `gte-rerank-v2`。启用方式：
+知识库 → 检索设置 → 混合检索 → Rerank 设置选 gte-rerank-v2，
+替代 weight 模式（重排一般优于固定权重）。
+
+> 若仍用本地 llama.cpp 栈（OpenAI 兼容供应商不暴露 rerank 类型），
+> 则维持权重混合（第 2 步），或参考 Chatflow HTTP 二次排序方案。
 
 ## 验证方法
 

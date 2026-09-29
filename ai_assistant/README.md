@@ -60,6 +60,6 @@ DIFY_DATASET_API_KEY=dataset-xxx python dify_sync.py --apply --dataset-id <id>
   全量 DAU 与抽样 5% 交叉验证吻合（如 12-02：97.04 万 ≈ 48,484 ÷ 5%）。
 - **Qwen2.5-0.5B 的能力边界**：简单聚合类 NL2SQL 可用；function calling
   不可靠，Agent 应用建议换 7B 以上 GGUF（`dify/agent_app.md` 有说明）。
-- **Rerank 暂不启用**：llama.cpp 支持 `--rerank`，但 Dify OpenAI 兼容供应商
-  不暴露 rerank 类型；当前用权重混合检索（语义 0.7/关键词 0.3）替代，
-  Chatflow HTTP 二次排序是后续扩展点。
+- **Rerank 取决于模型栈**：本地 llama.cpp 供应商配不进 rerank（用权重混合替代）；
+  若使用阿里百炼等带 rerank 模型的云供应商，知识库可直接启用 `gte-rerank-v2` 重排，
+  见 `dify/rag_tuning.md` 第 4 节。
