@@ -154,6 +154,47 @@ def _to_jsonable(v):
 
 
 # ---------- HTTP 服务 ----------
+def _extract_sql(raw: str) -> str:
+    """宽容解析请求体：兼容三种形态——
+    1. 标准 JSON {"sql": "..."}
+    2. LLM 直接输出的 JSON（可能嵌在模板里产生的双层包裹）
+    3. 纯 SQL 文本 / ```sql 代码块
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        raise ValueError("请求体为空")
+
+    # 形态 1/2：能按 JSON 解析时取 sql 字段；双层包裹时逐层剥壳
+    candidate = raw
+    for _ in range(3):
+        try:
+            payload = json.loads(candidate)
+        except Exception:
+            break
+        if isinstance(payload, dict) and "sql" in payload:
+            candidate = payload["sql"]
+            if not isinstance(candidate, str):
+                return json.dumps(candidate, ensure_ascii=False)
+        else:
+            break
+    sql = candidate if isinstance(candidate, str) else str(candidate)
+
+    # 形态 3：剥 markdown 代码块围栏
+    sql = re.sub(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", "", sql.strip()).strip()
+
+    # 兜底：双层包裹等非法 JSON（如 {"sql": "{"sql": "..."}"}）整体解析失败时，
+    # 从第一个 SELECT/WITH 截取，并修剪尾部的 }" 残渣
+    if not re.match(r"(?is)^\s*(select|with)\b", sql):
+        m = re.search(r"(?is)\b(select|with)\b.*", sql)
+        if not m:
+            raise ValueError('请求体需为 {"sql": "..."} 或纯 SQL 文本')
+        sql = m.group(0)
+    sql = re.sub(r"[\s;}\"']+$", "", sql).strip()
+    if not sql:
+        raise ValueError('请求体需为 {"sql": "..."} 或纯 SQL 文本')
+    return sql
+
+
 class Handler(BaseHTTPRequestHandler):
     engine: QueryEngine = None  # 类属性，main() 注入
 
@@ -180,8 +221,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get("Content-Length", 0))
-            payload = json.loads(self.rfile.read(length) or b"{}")
-            result = self.engine.run(payload.get("sql", ""))
+            raw = self.rfile.read(length).decode("utf-8", "ignore")
+            sql = _extract_sql(raw)
+            result = self.engine.run(sql)
             self._send(200, result)
         except ValueError as exc:
             self._send(400, {"error": str(exc)})
