@@ -92,7 +92,42 @@ SQL：SELECT category_id, COUNT(*) AS buy_count FROM user_behavior
 | 每天的购买用户数 | 9 行，12-03 最高 |
 | 购买量 top5 的类目 | 返回 5 行 |
 
-## 4. 已知限制（诚实声明）
+## 4. 故障排查
+
+### HTTP 节点报 SSRF protection（常见）
+
+报错形如 `Access to 'http://host.docker.internal:5057/query' was blocked by
+SSRF protection`——新版 Dify 的 HTTP 节点默认拦截解析到私有/回环地址的目标，
+而 `host.docker.internal` 正是内网 IP。修复：
+
+1. 编辑 Dify 部署目录下 `docker/.env`：
+   ```env
+   SSRF_PROXY_ALLOW_PRIVATE_IPS=192.168.65.0/24,172.16.0.0/12,10.0.0.0/8
+   ```
+2. 重建容器（restart 不一定重读 .env）：
+   ```bash
+   docker compose down && docker compose up -d
+   ```
+3. 仍报错则改 squid ACL：`docker/ssrf_proxy/squid.conf.template` 在
+   `http_access deny` 之前加：
+   ```
+   acl allowed_hosts dst 192.168.65.0/24 172.16.0.0/12 10.0.0.0/8
+   http_access allow allowed_hosts
+   ```
+4. 精确定位要放行的网段：
+   ```bash
+   docker exec -it <api容器名> python -c "import socket; print(socket.gethostbyname('host.docker.internal'))"
+   ```
+
+安全提示：放行等于允许 Dify 访问对应内网段；办公网环境建议只放行
+192.168.65.0/24（Docker Desktop 专用网段）。
+
+### 其他
+
+- 容器内访问宿主机必须用 `host.docker.internal`，`localhost` 指向容器自己
+- sql_tool_service 窗口关闭 = Dify 查询报连接失败，演示时保持运行
+
+## 5. 已知限制（诚实声明）
 
 - **Qwen2.5-0.5B 生成复杂 SQL 的可靠性有限**。简单聚合（DAU/计数/占比）通常可用；
   多表思路、窗口函数类问题容易出错。升级路径：把 llama.cpp 换载

@@ -33,6 +33,7 @@ emd_service/bge-m3-Q8_0.bat（:8081）：Embedding
 | `dify/nl2sql_workflow.md` | NL2SQL Chatflow 搭建指南（节点级配置） |
 | `dify/agent_app.md` | Agent 应用指南（工具导入 + 验收用例） |
 | `dify/rag_tuning.md` | 知识库 RAG 调优指南（分段/混合检索/rerank 路线） |
+| `dify/integrated_chatflow.md` | **整合版 Chatflow**：分类器路由 NL2SQL/RAG/Agent 三分支（推荐演示形态） |
 
 ## 快速开始
 
