@@ -23,8 +23,8 @@ import os
 import urllib.request
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-KNOWLEDGE_DIR = REPO_ROOT / "dify" / "dify_knowledge"
+REPO_ROOT = Path(__file__).resolve().parent
+KNOWLEDGE_DIR = REPO_ROOT / "dify_knowledge"
 DEFAULT_BASE = os.environ.get("DIFY_BASE_URL", "http://localhost/v1")
 
 RETRIEVAL_MODEL = {

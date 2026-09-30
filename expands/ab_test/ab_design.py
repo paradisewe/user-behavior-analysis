@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]  # 仓库根（本模块在 expands/ 下）
 DATA_FILE = REPO_ROOT / "python" / "data" / "cleaned_stratified_data.csv"
 
 CUTOFF = pd.Timestamp("2017-12-01 23:59:59")   # 实验开始前夜

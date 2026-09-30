@@ -36,7 +36,7 @@ from pathlib import Path
 
 import duckdb
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]  # 仓库根（本模块在 expands/ 下）
 PARQUET = REPO_ROOT / "python" / "data" / "UserBehavior.parquet"
 
 HOST, PORT = "127.0.0.1", 5057
