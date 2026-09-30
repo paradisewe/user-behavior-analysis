@@ -14,10 +14,9 @@
 - 整合 Chatflow 目前只存在于 Dify 数据库
 - 应用编辑页 → 更多操作 → 导出 DSL → 存入 `expands/ai_assistant/dify/`
 
-### 3. 全量 push 与 Streamlit 上云
-- 本地 main 领先远程 10+ 提交、feature/streamlit-cloud 1 个提交，均未推送
-- push 后到 share.streamlit.io 以 `expands/cloud_dashboard/app.py` 为入口部署
-  （步骤见 expands/cloud_dashboard/README.md）
+### ~~3. 全量 push 与 Streamlit 上云~~ ✅ 已完成（2026-09-30）
+- 仓库已推送至 GitHub（user-behavior-analysis），feature 分支已并入 main
+- 云看板已部署到 Streamlit Community Cloud，入口 `expands/cloud_dashboard/app.py`
 
 ## 二、质量提升
 
