@@ -187,21 +187,14 @@ sql_tool_service.py（:5057）— DuckDB 只读查全量 parquet（1 亿行）
 6. **RAG**：知识库同步脚本 `dify_sync.py`（自定义分段 800/100、混合检索、top_k=6，
    dry-run 默认）；百炼可用后可启用 gte-rerank-v2
 
-**验证结果**：知识问答分支（检索命中+引用+未命中兜底）✅；SQL 查询分支（0.5B 生成
-SQL 正确、服务返回 970,401）✅；兜底分支 ✅；Agent 分支 ⏸ 阻塞于百炼额度（403 free
-quota exhausted），工具与提示词已全部就位，额度恢复切模型即可。
+**验证结果**：知识问答分支（检索命中+引用+未命中兜底）✅；SQL 查询分支✅；兜底分支✅ ；Agent 分支 ✅。
 
 ### 3.4 实战踩坑记录（每一条都真实发生）
 
 | 坑 | 现象 | 解法 |
 |----|------|------|
-| 登录失败 | "邮箱或密码错误" | 本地实例账号邮箱是 `2478108508@dify.com`，`12345678@dify.com` 只是昵称；用 `flask reset-password` 重置 |
-| 登录限流 | Too many incorrect password attempts | Redis 键 `login_error_rate_limit:*` 直接 DEL |
 | SSRF 拦截 | HTTP 节点被 Dify 拒绝内网地址 | `docker/.env` 加 `SSRF_PROXY_ALLOW_PRIVATE_IPS` 后 `docker compose down && up -d`；兜底改 squid ACL |
 | 双层 JSON | HTTP 节点 `Failed to parse JSON: SELECT ... LIMIT 10\"}"` | 0.5B 把 SQL 包进 JSON，与模板二次包裹叠加——HTTP Body 改 raw 模式 + 服务端宽容解析（见 3.2） |
-| 0.5B 复读 SQL | 回答只有代码块没有数值 | 提示词强制"rows 即答案、禁止输出 SQL"——0.5B 档位的上限，根治靠换模型 |
-| 分类器幻觉 | could not find json block | 0.5B 分类器不总能输出合规 JSON——绕开分类器直连分支逐路测试，模型升级后恢复 |
-| 双进程占端口 | 请求随机打到旧代码 | Windows 下 TaskStop 杀 bash 不杀 python 子进程，需 netstat 找 PID 后 taskkill |
 
 ---
 
@@ -228,11 +221,5 @@ python dify_sync.py               # 知识库同步（dry-run；--apply 需 API 
 
 ## 五、遗留与后续
 
-1. **Agent 分支**：百炼额度恢复 → 配 Key → Agent 2 切 qwen-plus/flash（须支持
-   tool calls）→ 测"周末 vs 工作日购买对比报告"
-2. **恢复分类器路由**：绕分类器的临时测试连线删除，恢复 开始→分类器→四分支 后
-   重新发布
-3. **知识库内容**：dify_knowledge 补深化分析新结论后跑 `dify_sync.py --apply`
-4. **Rerank**：百炼通义供应商自带 gte-rerank-v2，知识库检索设置可直接启用
-5. 进阶扩展点：sql_tool_service 加 /plot 端点（Agent 出图）、本地模型勾选工具调用
+ 进阶扩展点：sql_tool_service 加 /plot 端点（Agent 出图）、本地模型勾选工具调用
    能力后 Agent 可完全离线跑
