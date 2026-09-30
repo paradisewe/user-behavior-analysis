@@ -20,8 +20,8 @@ User_behavier_analysis/
 │   ├── recommender/              类目协同过滤推荐原型
 │   ├── ai_assistant/             AI 智能问答（本地 Dify + SQL 工具服务）
 │   └── cloud_dashboard/          可公开访问的云部署看板
-├── plan.md                       剩余工作清单
-└── 拓展.md                       拓展层全景：实现步骤、结果、踩坑记录
+├── Plan.md                       剩余工作清单
+└── Expands.md                       拓展层全景：实现步骤、结果、踩坑记录
 ```
 
 ---
@@ -131,10 +131,10 @@ AI 助手完整搭建（Dify 对接 / 知识库同步 / 工具导入）见
 |--------|------|
 | 分析方法论与全部图表 | [python/README.md](python/README.md) |
 | SQL 全量方案 | [sql/README.md](sql/README.md) |
-| 拓展层怎么实现的（含踩坑记录） | [拓展.md](拓展.md) |
+| 拓展层怎么实现的（含踩坑记录） | [Expands.md](Expands.md) |
 | 四个拓展模块各自详情 | [expands/README.md](expands/README.md) 及各模块内 README |
 | AI 助手搭建与配置 | [expands/ai_assistant/README.md](expands/ai_assistant/README.md) |
-| 还剩什么没做 | [plan.md](plan.md) |
+| 还剩什么没做 | [Plan.md](Plan.md) |
 
 ---
 
