@@ -1,5 +1,7 @@
 # 云部署版 Dashboard（Streamlit Community Cloud）
 
+> 🔴 **在线版本**：[https://user-behavior-analysis-uzmhjvm2gsxshn8gh9fr9h.streamlit.app/](https://user-behavior-analysis-uzmhjvm2gsxshn8gh9fr9h.streamlit.app/)
+
 自包含的轻量版 Dashboard：加载仓库内的预聚合数据 `data/cloud_data.json`
 （68KB，仅聚合指标，无 user_id / item_id 明细），不依赖本地 222MB CSV，
 可直接部署到 Streamlit Community Cloud，面试官点链接即可访问。

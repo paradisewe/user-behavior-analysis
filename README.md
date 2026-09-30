@@ -4,6 +4,8 @@
 构建的完整数据分析作品集：一条**经全量交叉验证的 Python 分析管道**，一套**统计深化 + 业务模拟**的
 拓展研究，以及一个**接入本地大模型的 AI 智能问答助手**。
 
+> 🔴 **在线看板**：[https://user-behavior-analysis-uzmhjvm2gsxshn8gh9fr9h.streamlit.app/](https://user-behavior-analysis-uzmhjvm2gsxshn8gh9fr9h.streamlit.app/)（Streamlit Community Cloud，聚合数据公开版）
+
 ---
 
 ## 项目结构
@@ -63,7 +65,7 @@ User_behavier_analysis/
 | **ab_test** | A/B 测试框架全流程：功效分析 → 随机分组+SRM → 效应注入 → z 检验 → AA 校准 | 现有总体 MDE=2.27pp；200 次 AA 假阳性 4.5%≈理论 5%，框架自洽 |
 | **recommender** | 类目协同过滤 + 时间切分评估 vs 热门基线 | 诚实负结果：CF 仅达基线 0.48 倍（9 天窗口共现信号不足），已定位原因 |
 | **ai_assistant** | AI 智能问答系统（见下） | 四条分支全部跑通 |
-| **cloud_dashboard** | 自包含云部署看板：预聚合 68KB 数据（无用户明细），Streamlit Cloud 一键部署 | 本地/云端双版本 |
+| **cloud_dashboard** | 自包含云部署看板：预聚合 68KB 数据（无用户明细） | [在线访问](https://user-behavior-analysis-uzmhjvm2gsxshn8gh9fr9h.streamlit.app/) |
 
 ## 四、AI 智能问答系统（ai_assistant + 本地 Dify）
 
